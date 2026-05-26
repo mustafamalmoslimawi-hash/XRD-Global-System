@@ -1,7 +1,8 @@
 ﻿import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg') # هذا التعديل السحري يخبر بايثون بالرسم في الخلفية (للوئب) دون الحاجة لـ Tkinter
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from scipy.signal import find_peaks, peak_widths
