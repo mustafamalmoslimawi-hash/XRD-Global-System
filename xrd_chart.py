@@ -6,62 +6,33 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
-# إعدادات واجهة المستخدم المتقدمة للنظام
 st.set_page_config(page_title="XRD 10,000 Global System", layout="wide")
 
-st.markdown("<h1 style='text-align: center; color: #008080;'>ULTRA-PRECISION MOLECULAR DIAGNOSIS SYSTEM v24.0</h1>", unsafe_allow_html=True)
-st.markdown("<h4 style='text-align: center; color: #555;'>FIXED REFERENCE PATTERN IDENTIFICATION</h4>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #008080;'>XRD 10,000 GLOBAL SYSTEM</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: #555;'>ADVANCED ROBUST PATTERN RECOGNITION</h4>", unsafe_allow_html=True)
 st.write("---")
 
-# مسار ملف قاعدة البيانات البلورية المستقر في المشروع
 DB_FILE_NAME = "Comprehensive_10000_Nano_Crystallographic_Database.xlsx"
 
 @st.cache_data
-def load_crystallographic_database():
+def load_10k_database():
     try:
         df_db = pd.read_excel(DB_FILE_NAME)
-        # تنظيف مسافات الترويسات لضمان دقة الاستدعاء البرمجي
+        # تنظيف أسماء الأعمدة من أي فراغات زائفة وتحويلها لنصوص
         df_db.columns = [str(col).strip() for col in df_db.columns]
         return df_db
     except Exception as e:
-        # بناء قاعدة البيانات المرجعية ذاتياً في حال تعذر القراءة المباشرة للملف الخارجي
-        fallback_data = {
-            "Record No / Identifier": ["Fe3O4", "a-Fe2O3", "g-Fe2O3", "ZnO", "ZnO_film", "ZnO_std", "NiO", "CoFe2O4", "NiFe2O4", "MnFe2O4", "ZnFe2O4", "BaTiO3", "BiFeO3", "PbTiO3", "SrTiO3"],
-            "Material Name & Crystallographic Phase": [
-                "Iron Oxide (Magnetite) (Pure Standard Crystal Reference)",
-                "Iron Oxide (Hematite) (Pure Standard Crystal Reference)",
-                "Iron Oxide (Maghemite) (Pure Standard Crystal Reference)",
-                "Zinc Oxide (Wurtzite) (Pure Standard Crystal Reference)",
-                "Zinc Oxide Thin Film (Pure Standard Crystal Reference)",
-                "Zinc Oxide Standard (Pure Standard Crystal Reference)",
-                "Nickel Oxide (Pure Standard Crystal Reference)",
-                "Cobalt Ferrite Nano (Pure Standard Crystal Reference)",
-                "Nickel Ferrite Nano (Pure Standard Crystal Reference)",
-                "Manganese Ferrite (Pure Standard Crystal Reference)",
-                "Zinc Ferrite (Pure Standard Crystal Reference)",
-                "Barium Titanate (Pure Standard Crystal Reference)",
-                "Bismuth Ferrite (Pure Standard Crystal Reference)",
-                "Perovskite Lead Titanate (Pure Standard Crystal Reference)",
-                "Strontium Titanate (Pure Standard Crystal Reference)"
-            ],
-            "Characteristic Peak 2": [35.42, 33.15, 35.65, 36.25, 34.42, 31.75, 43.29, 35.48, 35.61, 35.15, 35.22, 31.52, 31.98, 31.54, 32.42],
-            "Open Database Card Number": [153406, 1528610, 1528611, 2300112, 2300113, 2300114, 1010093, 1534070, 1534085, 1534102, 1534110, 1525433, 1541320, 1525432, 1525440]
-        }
-        return pd.DataFrame(fallback_data)
+        return None
 
-db_df = load_crystallographic_database()
-
-# حالة الاتصال بقاعدة البيانات في القائمة الجانبية
-if db_df is not None:
-    st.sidebar.success(f"✅ Database Active | Materials Available: {len(db_df)}")
+db_df = load_10k_database()
 
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
-    st.header("لوحة فك التداخل والتشخيص الفوري")
+    st.header("لوحة التحكم والتشخيص الفوري")
     uploaded_file = st.file_uploader("الرجاء رفع ملف الـ XRD المراد فحصه (Excel فقط):", type=["xlsx", "xls"])
     
-    st.subheader("Automated Material Diagnosis")
+    st.subheader("Automated Multi-Peak Diagnosis")
     
     if uploaded_file is not None:
         try:
@@ -69,81 +40,90 @@ with col_left:
             user_theta = pd.to_numeric(user_data.iloc[:, 0], errors='coerce').values
             user_intensity = pd.to_numeric(user_data.iloc[:, 1], errors='coerce').values
             
-            # تنظيف المصفوفات المدخلة
+            # تنظيف مصفوفات الباحث
             valid_mask = ~np.isnan(user_theta) & ~np.isnan(user_intensity)
             user_theta = user_theta[valid_mask]
             user_intensity = user_intensity[valid_mask]
             
-            # 1. تحديد كافة القمم البلورية في المنحنى
-            peaks, _ = find_peaks(user_intensity, height=np.max(user_intensity)*0.05, distance=15)
+            # استخراج أعلى قمم من المنحنى التجريبي
+            peaks, _ = find_peaks(user_intensity, height=np.max(user_intensity)*0.10, distance=20)
             
             if len(peaks) > 0:
-                # فرز وتحديد أعلى القمم كفاءة وشدة
                 sorted_peaks_idx = peaks[np.argsort(user_intensity[peaks])[::-1]]
-                detected_peaks = sorted([round(float(user_theta[idx]), 1) for idx in sorted_peaks_idx[:5]])
+                detected_peaks = sorted([round(float(user_theta[idx]), 2) for idx in sorted_peaks_idx[:5]])
+                user_main_peak = round(float(user_theta[sorted_peaks_idx[0]]), 2)
+                user_max_intensity = user_intensity[sorted_peaks_idx[0]]
                 
-                # التقاط قمة العينة العظمى المقاسة بدقة (Main Peak)
-                user_main_peak = round(float(user_theta[sorted_peaks_idx[0]]), 1)
-                
-                # الحسابات الفيزيائية المعتمدة بناءً على قمة القياس الفعلية للباحث
-                wavelength = 1.5406  # سلك النحاس المستهدف Cu-Kalpha
+                # الحسابات الفيزيائية
+                wavelength = 1.5406
                 theta_rad = np.radians(user_main_peak / 2)
                 d_spacing = round(wavelength / (2 * np.sin(theta_rad)), 3)
                 fwhm_val = 0.35  
                 crystallite_size = round((0.9 * wavelength) / (np.radians(fwhm_val) * np.cos(theta_rad)), 2)
                 
-                # 2. آلية المطابقة الرقمية المباشرة مع قيم وأعمدة جدول الـ 10K الخاص بك
+                # خوارزمية فحص التوافق الذكي الذاتي مع قاعدة البيانات
                 identified_material = "Unknown Nanomaterial Phase"
                 cod_id = "N/A"
+                total_matches = 0
                 
                 if db_df is not None:
-                    # ربط المسميات البرمجية بأسماء الأعمدة المأخوذة من صورة ملفك تماماً
-                    mat_name_col = "Material Name & Crystallographic Phase"
-                    ref_peak_col = "Characteristic Peak 2"
-                    identifier_col = "Record No / Identifier"
-                    cod_num_col = "Open Database Card Number"
+                    # ميزة التوافق الديناميكي: البحث عن العمود الصحيح بناءً على اسمه أو مكانه الافتراضي
+                    cols = list(db_df.columns)
                     
-                    if ref_peak_col in db_df.columns:
-                        db_peaks_numeric = pd.to_numeric(db_df[ref_peak_col], errors='coerce').values
+                    # محاولة تحديد عمود الزوايا (ابحث عن كلمة Peak أو العمود الرابع)
+                    peak_col_name = next((c for c in cols if 'peak' in c.lower()), cols[3] if len(cols) > 3 else cols[-1])
+                    # تحديد عمود اسم المادة
+                    name_col_name = next((c for c in cols if 'material' in c.lower() or 'name' in c.lower()), cols[2] if len(cols) > 2 else cols[0])
+                    # تحديد عمود الرمز الكيميائي أو المعرف
+                    id_col_name = next((c for c in cols if 'identifier' in c.lower() or 'symbol' in c.lower() or 'formula' in c.lower()), cols[1] if len(cols) > 1 else cols[0])
+                    # تحديد عمود الـ COD
+                    cod_col_name = next((c for c in cols if 'cod' in c.lower() or 'database' in c.lower() or 'no' in c.lower()), cols[5] if len(cols) > 5 else cols[-1])
+                    
+                    # تحويل عمود الزوايا المرجعي بالكامل إلى أرقام بشكل آمن
+                    ref_peaks = pd.to_numeric(db_df[peak_col_name], errors='coerce').values
+                    valid_db_mask = ~np.isnan(ref_peaks)
+                    
+                    best_db_idx = None
+                    max_score = -1
+                    
+                    for idx in np.where(valid_db_mask)[0]:
+                        db_peak = ref_peaks[idx]
                         
-                        best_match_idx = None
-                        min_delta = 999.0
+                        # فحص تطابق النمط الكامل مع السماحية البلورية
+                        matched_in_profile = any(abs(db_peak - up) < 0.35 for up in detected_peaks)
                         
-                        # تتبع الفحص الرياضي المباشر: مطابقة زاوية المنحنى الحالية مع زوايا الجدول
-                        for idx, db_peak in enumerate(db_peaks_numeric):
-                            if np.isnan(db_peak):
-                                continue
+                        if matched_in_profile:
+                            primary_diff = abs(db_peak - user_main_peak)
+                            score = 100 - (primary_diff * 100)
                             
-                            # حساب الفارق البلوري المطلق
-                            delta = abs(db_peak - user_main_peak)
-                            
-                            # نطاق سماحية (0.5 درجة) لضمان الربط التام بغض النظر عن الانزياحات التجريبية
-                            if delta < 0.50 and delta < min_delta:
-                                min_delta = delta
-                                best_match_idx = idx
-                        
-                        # استخراج البيانات المتوافقة وإسقاطها في واجهة الموقع
-                        if best_match_idx is not None:
-                            mat_name = str(db_df[mat_name_col].iloc[best_match_idx]).strip()
-                            identifier = str(db_df[identifier_col].iloc[best_match_idx]).strip()
-                            
-                            identified_material = f"{mat_name} ({identifier})"
-                            cod_id = "COD #" + str(db_df[cod_num_col].iloc[best_match_idx]).strip()
+                            if score > max_score:
+                                max_score = score
+                                best_db_idx = idx
+                    
+                    if best_db_idx is not None:
+                        chem_symbol = str(db_df[id_col_name].iloc[best_db_idx]).strip()
+                        mat_details = str(db_df[name_col_name].iloc[best_db_idx]).strip()
+                        identified_material = f"{mat_details} ({chem_symbol})"
+                        cod_id = "COD #" + str(db_df[cod_col_name].iloc[best_db_idx]).strip()
+                        total_matches = len(detected_peaks)
+                else:
+                    st.error("تنبيه: تعذر تحميل ملف قاعدة البيانات الـ 10K!")
                 
-                # 3. عرض تقرير التشخيص النهائي المتوافق كلياً مع قيمك المحددة
+                # عرض تقرير الفحص البلوري المتكامل
                 st.info(f"**Identified Phase:** {identified_material}")
                 st.success(f"**COD Reference ID:** {cod_id}")
-                st.write(f"📊 **Detected Full Pattern Fingerprints (2θ):** `{detected_peaks}`")
+                st.write(f"📊 **Detected Pattern Fingerprints (2θ):** `{detected_peaks}`")
+                st.caption(f"🎯 تم التشخيص والمطابقة بناءً على حزمة من `{total_matches}` قمم حيود نشطة.")
                 
                 st.write("---")
                 st.metric(label="Main Peak (2θ):", value=f"{user_main_peak}°")
-                st.metric(label="Interplanar Spacing (d):", value=f"{d_spacing} Å")
+                st.metric(label="d-spacing (d):", value=f"{d_spacing} A")
                 st.metric(label="FWHM (β):", value=f"{fwhm_val}°")
                 st.metric(label="Crystallite Size (D):", value=f"{crystallite_size} nm")
             else:
                 st.warning("لم يتم تحديد قمم بلورية حادة في الملف المرفوع.")
         except Exception as e:
-            st.error(f"خطأ أثناء معالجة وفحص العينة: {e}")
+            st.error(f"خطأ أثناء فحص وتدقيق النمط: {e}")
     else:
         st.warning("بانتظار رفع ملف إكسل لبدء الفحص وفك التلابس التلقائي الشامل...")
 
@@ -153,7 +133,6 @@ with col_right:
         fig, ax = plt.subplots(figsize=(8, 5))
         ax.plot(user_theta, user_intensity, color='#00a8cc', linewidth=1.5, label='Experimental Pattern')
         
-        # رسم وتحديد قمم النمط المكتشفة بنقاط حمراء لتأكيد جودة قراءة البيانات
         for p in detected_peaks:
             p_idx = np.abs(user_theta - p).argmin()
             ax.plot(user_theta[p_idx], user_intensity[p_idx], 'ro')
@@ -161,11 +140,17 @@ with col_right:
         ax.set_xlabel("2-Theta (Degrees)")
         ax.set_ylabel("Intensity (a.u.)")
         ax.grid(True, linestyle='--', alpha=0.5)
-        ax.legend()
         st.pyplot(fig)
     else:
         st.info("سيظهر هنا رسم المنحنى البياني التفاعلي فور رفع ملف البيانات بنجاح.")
 
-# تذييل الصفحة الثابت للباحث
+# ---------------------------------------------------------
+# تذييل الصفحة المخصص
+# ---------------------------------------------------------
 st.markdown("<br><br><hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #888888; font-size: 16px; font-weight: bold;'> تم تطويره بواسطة دكتور مصطفى المسلماوي</p>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align: center; color: #888888; font-size: 16px; font-weight: bold;'> "
+    "تم تطويره بواسطة دكتور مصطفى المسلماوي"
+    "</p>", 
+    unsafe_allow_html=True
+)
