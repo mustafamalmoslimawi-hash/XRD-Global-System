@@ -9,7 +9,7 @@ from scipy.signal import find_peaks
 # إعدادات واجهة المستخدم المتقدمة
 st.set_page_config(page_title="XRD 10,000 Global System", layout="wide")
 
-st.markdown("<h1 style='text-align: center; color: #008080;'>🔬 XRD 10,000 GLOBAL SYSTEM</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #008080;'>XRD 10,000 GLOBAL SYSTEM</h1>", unsafe_allow_html=True)
 st.markdown("<h4 style='text-align: center; color: #555;'>HIGH-PRECISION AUTOMATED MOLECULAR DIAGNOSIS</h4>", unsafe_allow_html=True)
 st.write("---")
 
@@ -29,7 +29,7 @@ db_df = load_10k_database()
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
-    st.header("🎛️ لوحة التحكم والتشخيص الفوري")
+    st.header("لوحة التحكم والتشخيص الفوري")
     uploaded_file = st.file_uploader("الرجاء رفع ملف الـ XRD المراد فحصه (Excel فقط):", type=["xlsx", "xls"])
     
     st.subheader("Automated Material Diagnosis")
@@ -93,7 +93,7 @@ with col_left:
                 st.info(f"**Identified Material:** {identified_material}")
                 st.success(f"**COD Reference ID:** {cod_id}")
                 if confidence > 0:
-                    st.caption(f"🎯 **System Confidence Score:** {confidence}%")
+                    st.caption(f"System Confidence Score: {confidence}%")
                 
                 st.metric(label="Main Peak (2θ):", value=f"{user_main_peak}°")
                 st.metric(label="d-spacing (d):", value=f"{d_spacing} A")
@@ -125,8 +125,8 @@ with col_right:
 # ---------------------------------------------------------
 st.markdown("<br><br><hr>", unsafe_allow_html=True)
 st.markdown(
-    "<p style='text-align: center; color: #888888; font-size: 16px; font-weight: bold;'>"
-    "🛠️ تم تطويره بواسطة دكتور مصطفى المسلماوي"
+    "<p style='text-align: center; color: #888888; font-size: 16px; font-weight: bold;'> "
+    "تم تطويره بواسطة دكتور مصطفى المسلماوي"
     "</p>", 
     unsafe_allow_html=True
 )
